@@ -3,56 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Daily Campus v2 (Full Year)</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Daily Campus v2.0</title>
+    
     <style>
         :root {
             --bg-canvas: #ffffff;
-            --bg-body: #f5f7fa;
-            --text-main: #1a1a1a;
-            --box-border: 3px solid #1a1a1a;
+            --bg-body: #f8f9fa;
+            --text-main: #111111;
+            --box-border: 3px solid #111111;
             --highlight: #dfff00;
-            --radius: 20px;
+            --accent-blue: #2563eb;
+            --radius: 24px;
         }
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg-body); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .main-canvas { width: 100%; max-width: 900px; background: #fff; border: var(--box-border); border-radius: var(--radius); padding: 20px; box-shadow: 8px 8px 0px #000; }
-        .header { text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 20px; }
-        
-        .view-controls { text-align: center; margin-bottom: 20px; }
-        .btn { padding: 10px 20px; border: 2px solid #000; border-radius: 30px; background: #fff; font-weight: 800; cursor: pointer; }
-        
-        #month-select { padding: 8px; border: 2px solid #000; border-radius: 10px; font-weight: 800; margin-bottom: 15px; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #000; border: 2px solid #000; border-radius: 10px; overflow: hidden; }
-        .cal-header { background: #f0f0f0; padding: 10px; text-align: center; font-size: 12px; font-weight: 800; }
-        .cal-day { background: #fff; min-height: 80px; padding: 8px; font-size: 13px; position: relative; }
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: env(safe-area-inset-top) 15px 30px 15px;
+            margin: 0;
+            -webkit-user-select: none;
+        }
+
+        .main-canvas {
+            width: 100%;
+            max-width: 1100px;
+            background: var(--bg-canvas);
+            border: var(--box-border);
+            padding: clamp(15px, 4vw, 30px);
+            box-shadow: 10px 10px 0px #111111;
+            border-radius: var(--radius);
+            box-sizing: border-box;
+            margin-top: 15px;
+        }
+
+        .header-title { font-size: clamp(20px, 5vw, 28px); font-weight: 900; text-align: center; margin-bottom: 25px; }
+
+        /* 선택 과목 가로 스크롤 */
+        .selection-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .selection-grid::-webkit-scrollbar { display: none; }
+
+        .select-box {
+            flex: 0 0 160px;
+            border: 2px solid var(--text-main);
+            padding: 12px;
+            border-radius: 20px;
+            background: #fff;
+        }
+        .select-box h4 { margin: 0 0 10px 0; font-size: 11px; color: #888; text-align: center; font-weight: 800; }
+        .btn-group { display: flex; flex-direction: column; gap: 6px; }
+
+        button.subject-btn {
+            padding: 10px;
+            border: 1.5px solid var(--text-main);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button.subject-btn.active { background: var(--text-main); color: #fff; }
+
+        .content-layout { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 1024px) { .content-layout { grid-template-columns: 2.5fr 1.5fr; } }
+
+        .view-panel, .task-panel { border: var(--box-border); border-radius: var(--radius); padding: 20px; background: #fff; }
+
+        /* 시간표 및 달력 공통 */
+        .timetable-wrapper { overflow-x: auto; border-radius: 15px; border: 1px solid #eee; }
+        .timetable { width: 100%; border-collapse: collapse; min-width: 500px; }
+        .timetable th, .timetable td { border: 1px solid #eee; padding: 12px 5px; text-align: center; height: 60px; }
+        .timetable th { background: #f9fafb; font-size: 13px; font-weight: 800; border-bottom: 2px solid #000; }
+        .period-col { background: #f3f4f6; font-weight: 900; width: 40px; border-right: 2px solid #000; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #000; border: 2px solid #000; border-radius: 12px; overflow: hidden; }
+        .cal-header { text-align: center; font-weight: 800; padding: 10px; background: #f8f9fa; font-size: 11px; }
+        .cal-day { min-height: 90px; padding: 8px; font-size: 12px; background: #fff; }
         .cal-day.empty { background: #fafafa; }
-        
+        .cal-task-tag { font-size: 9px; background: var(--highlight); border: 1px solid #000; margin-top: 3px; padding: 2px; border-radius: 4px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* 입력 폼 */
+        .input-ui input, .input-ui select { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--text-main); border-radius: 12px; font-size: 14px; box-sizing: border-box; }
+        .add-btn { width: 100%; padding: 15px; background: var(--text-main); color: #fff; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; }
+
         .hidden { display: none !important; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
+<div id="loading-overlay">
+    <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #000; border-radius:50%; animation:spin 1s linear infinite;"></div>
+    <p style="font-weight:700; margin-top:15px;">Campus v2.0 Loading...</p>
+</div>
+
 <div class="main-canvas">
-    <div class="header">CAMPUS v2.0</div>
-    
-    <div class="view-controls">
-        <button class="btn" onclick="toggleView()">전환: 주간 / 월간</button>
+    <div class="header-title">Daily Campus v2.0</div>
+
+    <div class="selection-grid" id="selection-grid">
+        <div id="group-A" class="select-box"><h4>GROUP A</h4><div class="btn-group"></div></div>
+        <div id="group-B" class="select-box"><h4>GROUP B</h4><div class="btn-group"></div></div>
+        <div id="group-C" class="select-box"><h4>GROUP C</h4><div class="btn-group"></div></div>
+        <div id="group-D" class="select-box"><h4>GROUP D</h4><div class="btn-group"></div></div>
+        <div id="group-E" class="select-box"><h4>GROUP E</h4><div class="btn-group"></div></div>
+        <div id="group-F" class="select-box"><h4>GROUP F</h4><div class="btn-group"></div></div>
+        <div id="group-G" class="select-box"><h4>GROUP G</h4><div class="btn-group"></div></div>
     </div>
 
-    <div id="weekly-view">
-        <p style="text-align:center;">📅 주간 시간표가 여기에 표시됩니다.</p>
-    </div>
-
-    <div id="monthly-view" class="hidden">
-        <div style="text-align: center;">
-            <select id="month-select" onchange="renderCalendar()"></select>
+    <div class="content-layout">
+        <div class="view-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 id="view-title" style="margin:0; font-weight:900;">⏰ Weekly</h3>
+                <button onclick="toggleView()" style="padding:8px 15px; border-radius:20px; border:2px solid #000; background:#fff; font-weight:800; font-size:11px; cursor:pointer;">VIEW SWITCH</button>
+            </div>
+            
+            <div id="weekly-view" class="timetable-wrapper">
+                <table class="timetable">
+                    <thead><tr><th class="period-col">#</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th></tr></thead>
+                    <tbody id="timetable-body"></tbody>
+                </table>
+            </div>
+            
+            <div id="monthly-view" class="hidden">
+                <div style="text-align:center; margin-bottom:10px;">
+                    <select id="month-select" onchange="renderCalendar()" style="width:auto; font-weight:800; border:2px solid #000; border-radius:10px; padding:5px 15px;"></select>
+                </div>
+                <div class="calendar-grid" id="calendar-body"></div>
+            </div>
         </div>
-        <div class="calendar-grid" id="calendar-body"></div>
+
+        <div class="task-panel">
+            <div class="input-ui">
+                <h3 style="margin-top:0;">📝 New Plan</h3>
+                <select id="task-sub-select"></select>
+                <input type="text" id="task-title" placeholder="할 일을 입력하세요">
+                <input type="text" id="task-date" placeholder="날짜 (MM/DD)">
+                <button class="add-btn" onclick="saveTask()">저장하기</button>
+            </div>
+            <div id="task-list" style="margin-top:20px;"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    // 2026년 1월~12월 달력 데이터 (일수, 시작요일: 0=일, 1=월...)
+    // --- Data & Config ---
+    const subjectGroups = {
+        "A": [{n:"심화 국어", r:"3-6"}, {n:"여행지리", r:"3-2"}, {n:"생명과학II", r:"3-8"}],
+        "B": [{n:"심화 국어", r:"3-4"}, {n:"확률과 통계", r:"3-6"}],
+        "C": [{n:"확률과 통계", r:"3-9"}, {n:"논술", r:"3-4"}],
+        "D": [{n:"심화 수학", r:"3-9"}, {n:"사회문제 탐구", r:"3-1"}],
+        "E": [{n:"사회문제 탐구", r:"3-6"}, {n:"여행지리", r:"3-5"}],
+        "F": [{n:"심화 수학", r:"3-11"}, {n:"심화 영어", r:"사비오실"}],
+        "G": [{n:"생활과 윤리", r:"3-3"}, {n:"한국지리", r:"3-7"}]
+    };
+    const baseSchedule = [
+        ["독서", "G", "자율/창체", "E", "미적분"], ["B", "D", "운동과 건강", "물리학II", "독서"],
+        ["운동과 건강", "물리학II", "C", "F", "G"], ["A", "E", "G", "미적분", "B"],
+        ["영어 독해", "미적분", "독서", "A", "D"], ["C", "영어 독해", "F", "영어 독해", "자율/창체"],
+        ["공강", "공강", "물리학II", "공강", "자율/창체"]
+    ];
+    const fixedRooms = { "독서": "3-9", "미적분": "3-9", "물리학II": "3-9", "영어 독해": "3-9", "운동과 건강": "체육관", "공강": "3-9", "자율/창체": "3-9" };
+    
+    // 2026년 전체 달력 데이터 (일수, 시작요일: 0=일, 1=월...)
     const calData2026 = [
         { n: "1월", d: 31, s: 4 }, { n: "2월", d: 28, s: 0 }, { n: "3월", d: 31, s: 0 },
         { n: "4월", d: 30, s: 3 }, { n: "5월", d: 31, s: 5 }, { n: "6월", d: 30, s: 1 },
@@ -60,14 +185,64 @@
         { n: "10월", d: 31, s: 4 }, { n: "11월", d: 30, s: 0 }, { n: "12월", d: 31, s: 2 }
     ];
 
+    let state = {
+        subjects: {A:null, B:null, C:null, D:null, E:null, F:null, G:null},
+        tasks: []
+    };
+
+    // --- Init ---
     window.onload = () => {
+        initMonthSelector();
+        updateUI();
+        setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 800);
+    };
+
+    function initMonthSelector() {
         const sel = document.getElementById('month-select');
         calData2026.forEach((m, i) => {
             sel.innerHTML += `<option value="${i}">2026년 ${m.n}</option>`;
         });
-        sel.value = new Date().getMonth(); // 현재 달 자동 선택
+        sel.value = new Date().getMonth();
+    }
+
+    function updateUI() {
+        renderSelection();
+        renderTimetable();
         renderCalendar();
-    };
+        renderTasks();
+        updateSubDropdown();
+    }
+
+    // --- Render Functions ---
+    function renderSelection() {
+        Object.keys(subjectGroups).forEach(g => {
+            const container = document.querySelector(`#group-${g} .btn-group`);
+            container.innerHTML = '';
+            subjectGroups[g].forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = `subject-btn ${state.subjects[g]?.n === s.n ? 'active' : ''}`;
+                btn.innerText = s.n;
+                btn.onclick = () => { state.subjects[g] = s; updateUI(); };
+                container.appendChild(btn);
+            });
+        });
+    }
+
+    function renderTimetable() {
+        const body = document.getElementById('timetable-body');
+        body.innerHTML = '';
+        baseSchedule.forEach((row, p) => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td class="period-col">${p+1}</td>`;
+            row.forEach((cell) => {
+                let sub = cell;
+                let room = fixedRooms[cell] || (state.subjects[cell] ? state.subjects[cell].r : "");
+                if(state.subjects[cell]) sub = state.subjects[cell].n;
+                tr.innerHTML += `<td><div style="font-weight:900; font-size:12px;">${sub}</div><div style="font-size:10px; color:#999;">${room}</div></td>`;
+            });
+            body.appendChild(tr);
+        });
+    }
 
     function renderCalendar() {
         const idx = document.getElementById('month-select').value;
@@ -77,13 +252,64 @@
 
         ["일","월","화","수","목","금","토"].forEach(h => body.innerHTML += `<div class="cal-header">${h}</div>`);
         for(let i=0; i<config.s; i++) body.innerHTML += `<div class="cal-day empty"></div>`;
-        for(let i=1; i<=config.d; i++) body.innerHTML += `<div class="cal-day"><b>${i}</b></div>`;
+        for(let d=1; d<=config.d; d++) {
+            const dateStr = `${parseInt(idx)+1}/${d < 10 ? '0'+d : d}`;
+            const dayTasks = state.tasks.filter(t => t.date.includes(dateStr));
+            body.innerHTML += `<div class="cal-day">
+                <b>${d}</b>
+                ${dayTasks.map(t => `<div class="cal-task-tag">${t.title}</div>`).join('')}
+            </div>`;
+        }
     }
 
-    function toggleView() {
-        document.getElementById('weekly-view').classList.toggle('hidden');
-        document.getElementById('monthly-view').classList.toggle('hidden');
+    function updateSubDropdown() {
+        const sel = document.getElementById('task-sub-select');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">과목 선택</option>';
+        const fixedList = [...new Set(baseSchedule.flat().filter(s => !subjectGroups[s]))];
+        fixedList.forEach(s => { if(s) sel.innerHTML += `<option value="${s}">${s}</option>`; });
+        Object.values(state.subjects).forEach(s => { if(s && s.n) sel.innerHTML += `<option value="${s.n}">${s.n}</option>`; });
+        sel.value = current;
     }
+
+    window.saveTask = () => {
+        const sub = document.getElementById('task-sub-select').value;
+        const title = document.getElementById('task-title').value;
+        const date = document.getElementById('task-date').value;
+        if(sub && title) {
+            state.tasks.push({ id: Date.now(), sub, title, date });
+            updateUI();
+            document.getElementById('task-title').value = '';
+            document.getElementById('task-date').value = '';
+        }
+    };
+
+    function renderTasks() {
+        const list = document.getElementById('task-list');
+        list.innerHTML = '<h4>할 일 목록</h4>';
+        state.tasks.forEach(t => {
+            list.innerHTML += `<div style="border:2px solid #000; padding:12px; margin-bottom:8px; border-radius:12px; position:relative; background:#fff;">
+                <div style="font-size:10px; font-weight:800; color:var(--accent-blue);">${t.sub}</div>
+                <div style="font-weight:700; font-size:14px;">${t.title}</div>
+                <div style="font-size:10px; color:#aaa;">${t.date}</div>
+                <div onclick="deleteTask(${t.id})" style="position:absolute; top:10px; right:12px; cursor:pointer; font-weight:bold;">×</div>
+            </div>`;
+        });
+    }
+
+    window.deleteTask = (id) => {
+        state.tasks = state.tasks.filter(t => t.id !== id);
+        updateUI();
+    };
+
+    window.toggleView = () => {
+        const w = document.getElementById('weekly-view');
+        const m = document.getElementById('monthly-view');
+        const t = document.getElementById('view-title');
+        w.classList.toggle('hidden'); m.classList.toggle('hidden');
+        t.innerText = w.classList.contains('hidden') ? '🗓️ Monthly' : '⏰ Weekly';
+    };
 </script>
+<style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
 </body>
 </html>
