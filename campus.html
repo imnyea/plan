@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>스마트 플래너 Pro</title>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
+    <style>
+        :root {
+            --bg-canvas: #ffffff;
+            --bg-body: #f0f0f0;
+            --text-main: #000000;
+            --box-border: 3px solid #000000;
+            --highlight: #ffff00;
+            --accent-red: #ff4d4d;
+            --accent-blue: #007bff;
+            --soft-blue: #eef6ff;
+            --radius: 20px;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            margin: 0;
+            -webkit-user-select: none;
+        }
+
+        .main-canvas {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--bg-canvas);
+            border: var(--box-border);
+            padding: 20px;
+            box-shadow: 10px 10px 0px var(--text-main);
+            border-radius: var(--radius);
+            box-sizing: border-box;
+        }
+
+        .header-title { font-size: 24px; font-weight: 900; text-align: center; margin-bottom: 20px; }
+
+        /* 선택 과목 가로 스크롤 최적화 */
+        .selection-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding: 5px 5px 15px 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .selection-grid::-webkit-scrollbar { height: 6px; }
+        .selection-grid::-webkit-scrollbar-thumb { background: var(--text-main); border-radius: 10px; }
+
+        .select-box {
+            flex: 0 0 160px;
+            border: 2px solid var(--text-main);
+            padding: 10px;
+            border-radius: 15px;
+            background: var(--bg-canvas);
+        }
+        .select-box h4 { margin: 0 0 8px 0; font-size: 12px; opacity: 0.6; text-align: center; }
+        .btn-group { display: flex; flex-direction: column; gap: 4px; }
+
+        button.subject-btn {
+            padding: 8px;
+            border: 1.5px solid var(--text-main);
+            background: var(--bg-canvas);
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button.subject-btn.active { background: var(--text-main); color: var(--bg-canvas); }
+
+        .content-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 1024px) { .content-layout { grid-template-columns: 2.8fr 1.2fr; } }
+
+        .view-panel, .task-panel { border: var(--box-border); border-radius: var(--radius); padding: 15px; background: var(--bg-canvas); min-height: 400px; }
+
+        /* 시간표 및 달력 공통 */
+        .timetable-wrapper { overflow-x: auto; }
+        .timetable { width: 100%; border-collapse: collapse; min-width: 500px; }
+        .timetable th, .timetable td { border: 1.5px solid var(--text-main); padding: 8px 4px; text-align: center; height: 60px; }
+        .period-col { background: rgba(0,0,0,0.05); font-weight: bold; width: 40px; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; border: 1.5px solid var(--text-main); }
+        .cal-header { text-align: center; font-weight: bold; padding: 5px; background: #eee; font-size: 12px; border-bottom: 1.5px solid var(--text-main); }
+        .cal-day { min-height: 80px; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 4px; font-size: 11px; background: #fff; }
+        .cal-day:nth-child(7n), .cal-day:last-child { border-right: none; }
+        .cal-day.today-highlight { background: var(--soft-blue); font-weight: bold; border: 2px solid var(--accent-blue) !important; }
+        .cal-task-item { font-size: 9px; background: var(--highlight); border: 1px solid #000; margin-top: 2px; padding: 1px; border-radius: 3px; }
+
+        /* 입력 UI */
+        .input-ui input, .input-ui select { width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid var(--text-main); border-radius: 8px; box-sizing: border-box; }
+        .add-btn { width: 100%; padding: 12px; background: var(--text-main); color: var(--bg-canvas); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .hidden { display: none !important; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay">
+    <div style="width:40px; height:40px; border:4px solid #eee; border-top:4px solid #000; border-radius:50%; animation:spin 1s linear infinite;"></div>
+    <p>데이터 동기화 중...</p>
+</div>
+
+<div class="main-canvas">
+    <div class="header-title" id="main-title">플래너 로딩 중...</div>
+
+    <div class="selection-grid" id="selection-grid">
+        <div id="group-A" class="select-box"><h4>선택 A</h4><div class="btn-group"></div></div>
+        <div id="group-B" class="select-box"><h4>선택 B</h4><div class="btn-group"></div></div>
+        <div id="group-C" class="select-box"><h4>선택 C</h4><div class="btn-group"></div></div>
+        <div id="group-D" class="select-box"><h4>선택 D</h4><div class="btn-group"></div></div>
+        <div id="group-E" class="select-box"><h4>선택 E</h4><div class="btn-group"></div></div>
+        <div id="group-F" class="select-box"><h4>선택 F</h4><div class="btn-group"></div></div>
+        <div id="group-G" class="select-box"><h4>선택 G</h4><div class="btn-group"></div></div>
+        <div id="group-After" class="select-box"><h4>방과후</h4><div id="after-school-display"></div></div>
+    </div>
+
+    <div class="content-layout">
+        <div class="view-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 id="view-title" style="margin:0;">⏰ 주간 시간표</h3>
+                <button onclick="toggleView()" style="padding:8px 12px; border-radius:20px; border:2px solid #000; background:#fff; font-weight:bold;">월간/주간 전환</button>
+            </div>
+            
+            <div id="weekly-view" class="timetable-wrapper">
+                <table class="timetable">
+                    <thead><tr><th class="period-col"></th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead>
+                    <tbody id="timetable-body"></tbody>
+                </table>
+            </div>
+            
+            <div id="monthly-view" class="hidden">
+                <div style="text-align:center; margin-bottom:10px;">
+                    <select id="single-month-select" onchange="renderCalendar()" style="padding:5px; font-size:16px; font-weight:bold;"></select>
+                </div>
+                <div class="calendar-grid" id="calendar-body"></div>
+            </div>
+        </div>
+
+        <div class="task-panel">
+            <div class="input-ui">
+                <h3>📝 일정 등록</h3>
+                <select id="task-sub-select" onchange="updatePeriods()"></select>
+                <input type="text" id="task-title" placeholder="활동 내용">
+                <input type="text" id="task-date" placeholder="날짜 (M/D) 예: 5/15">
+                <select id="task-period-select" disabled><option value="">과목을 먼저 선택하세요</option></select>
+                <button class="add-btn" onclick="saveTask()">등록하기</button>
+            </div>
+            <div id="task-list"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    // --- 데이터 정의 ---
+    const subjectGroups = {
+        "A": [{n:"심화 국어", r:"3-6"}, {n:"여행지리", r:"3-2"}, {n:"생명과학II", r:"3-8"}],
+        "B": [{n:"심화 국어", r:"3-4"}, {n:"확률과 통계", r:"3-6"}],
+        "C": [{n:"확률과 통계", r:"3-9"}, {n:"논술", r:"3-4"}],
+        "D": [{n:"심화 수학", r:"3-9"}, {n:"사회문제 탐구", r:"3-1"}],
+        "E": [{n:"사회문제 탐구", r:"3-6"}, {n:"여행지리", r:"3-5"}],
+        "F": [{n:"심화 수학", r:"3-11"}, {n:"심화 영어", r:"사비오실"}],
+        "G": [{n:"생활과 윤리", r:"3-3"}, {n:"한국지리", r:"3-7"}]
+    };
+    const baseSchedule = [
+        ["독서", "G", "자율/창체", "E", "미적분"], ["B", "D", "운동과 건강", "물리학II", "독서"],
+        ["운동과 건강", "물리학II", "C", "F", "G"], ["A", "E", "G", "미적분", "B"],
+        ["영어 독해", "미적분", "독서", "A", "D"], ["C", "영어 독해", "F", "영어 독해", "자율/창체"],
+        ["공강", "공강", "물리학II", "공강", "자율/창체"]
+    ];
+    const fixedRooms = { "독서": "3-9", "미적분": "3-9", "물리학II": "3-9", "영어 독해": "3-9", "운동과 건강": "체육관", "공강": "3-9", "자율/창체": "3-9" };
+    const calendarData = [
+        {name:"2026년 5월", last:31, start:5}, {name:"2026년 6월", last:30, start:1} // 예시 데이터
+    ];
+
+    let state = {
+        subjects: {A:null, B:null, C:null, D:null, E:null, F:null, G:null},
+        after: [], tasks: [], title: "나의 스마트 플래너", theme: {bg:"#ffffff", high:"#ffff00", text:"#000000"}
+    };
+
+    // --- 핵심 함수 ---
+    window.onload = () => {
+        // 초기 렌더링
+        updateUI();
+        document.getElementById('loading-overlay').style.display = 'none';
+    };
+
+    function updateUI() {
+        document.getElementById('main-title').innerText = state.title;
+        renderSelection();
+        renderTimetable();
+        renderTasks();
+        renderCalendar();
+        updateSubDropdown();
+    }
+
+    function renderSelection() {
+        Object.keys(subjectGroups).forEach(g => {
+            const container = document.querySelector(`#group-${g} .btn-group`);
+            container.innerHTML = '';
+            subjectGroups[g].forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = `subject-btn ${state.subjects[g]?.n === s.n ? 'active' : ''}`;
+                btn.innerText = s.n;
+                btn.onclick = () => { state.subjects[g] = s; updateUI(); };
+                container.appendChild(btn);
+            });
+        });
+    }
+
+    function renderTimetable() {
+        const body = document.getElementById('timetable-body');
+        body.innerHTML = '';
+        baseSchedule.forEach((row, p) => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td class="period-col">${p+1}</td>`;
+            row.forEach((cell, d) => {
+                let sub = cell;
+                let room = fixedRooms[cell] || (state.subjects[cell] ? state.subjects[cell].r : "");
+                if(state.subjects[cell]) sub = state.subjects[cell].n;
+                tr.innerHTML += `<td><div style="font-weight:900; font-size:13px;">${sub}</div><div style="font-size:10px; opacity:0.6;">${room}</div></td>`;
+            });
+            body.appendChild(tr);
+        });
+    }
+
+    // [중요 수정] 고정 과목을 드롭다운에 추가하는 로직
+    function updateSubDropdown() {
+        const sel = document.getElementById('task-sub-select');
+        sel.innerHTML = '<option value="">과목 선택</option>';
+        
+        // 1. 고정 과목 추가 (중복 제거)
+        const fixedList = [...new Set(baseSchedule.flat().filter(s => !subjectGroups[s]))];
+        fixedList.forEach(s => { if(s) sel.innerHTML += `<option value="${s}">${s}</option>`; });
+        
+        // 2. 선택된 과목 추가
+        Object.values(state.subjects).forEach(s => { if(s) sel.innerHTML += `<option value="${s.n}">${s.n}</option>`; });
+    }
+
+    function renderCalendar() {
+        const mSelect = document.getElementById('single-month-select');
+        if(mSelect.innerHTML === "") calendarData.forEach((m, i) => mSelect.innerHTML += `<option value="${i}">${m.name}</option>`);
+        
+        const mIdx = parseInt(mSelect.value) || 0;
+        const m = calendarData[mIdx];
+        const body = document.getElementById('calendar-body');
+        body.innerHTML = '';
+
+        ["일","월","화","수","목","금","토"].forEach(d => body.innerHTML += `<div class="cal-header">${d}</div>`);
+        for(let i=0; i<m.start; i++) body.innerHTML += `<div class="cal-day" style="background:#f9f9f9;"></div>`;
+        for(let d=1; d<=m.last; d++) {
+            const dateStr = `5/${d}`; // 날짜 비교용 (추후 동적 변경 가능)
+            const dTasks = state.tasks.filter(t => t.date === dateStr);
+            body.innerHTML += `<div class="cal-day">
+                <div style="margin-bottom:5px;">${d}</div>
+                ${dTasks.map(t => `<div class="cal-task-item">${t.title}</div>`).join('')}
+            </div>`;
+        }
+    }
+
+    window.toggleView = () => {
+        const w = document.getElementById('weekly-view');
+        const m = document.getElementById('monthly-view');
+        const t = document.getElementById('view-title');
+        w.classList.toggle('hidden');
+        m.classList.toggle('hidden');
+        t.innerText = w.classList.contains('hidden') ? '🗓️ 월간 달력' : '⏰ 주간 시간표';
+        if(!m.classList.contains('hidden')) renderCalendar();
+    };
+
+    window.updatePeriods = () => {
+        const pSel = document.getElementById('task-period-select');
+        pSel.disabled = false;
+        pSel.innerHTML = '<option>1교시</option><option>2교시</option><option>3교시</option><option>4교시</option><option>5교시</option><option>6교시</option><option>7교시</option>';
+    };
+
+    window.saveTask = () => {
+        const sub = document.getElementById('task-sub-select').value;
+        const title = document.getElementById('task-title').value;
+        const date = document.getElementById('task-date').value;
+        if(sub && title) {
+            state.tasks.push({ sub, title, date });
+            updateUI();
+            document.getElementById('task-title').value = '';
+        }
+    };
+
+    function renderTasks() {
+        const list = document.getElementById('task-list');
+        list.innerHTML = '<h4>📌 일정 목록</h4>';
+        state.tasks.forEach(t => {
+            list.innerHTML += `<div style="border:1.5px solid #000; padding:10px; margin-bottom:5px; border-radius:10px; font-size:13px;">
+                <b>[${t.sub}]</b> ${t.title} <span style="float:right; color:red;">${t.date}</span>
+            </div>`;
+        });
+    }
+</script>
+</body>
+</html>
