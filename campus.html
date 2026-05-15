@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Daily Campus Pro v3</title>
+    <title>Daily Campus v3 - Full Integration</title>
     
     <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
 
     <style>
         :root {
             --bg-canvas: #ffffff;
-            --bg-body: #f4f6f9;
+            --bg-body: #f5f7fa;
             --text-main: #1a1a1a;
             --text-muted: #71717a;
             --box-border: 3px solid #1a1a1a;
@@ -29,127 +30,11 @@
             font-family: 'Pretendard', sans-serif;
             background: var(--bg-body);
             color: var(--text-main);
-            margin: 0; padding: env(safe-area-inset-top) 20px 40px;
+            margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* Container & Header */
-        .main-canvas {
-            width: 100%; max-width: 1100px;
-            background: var(--bg-canvas);
-            border: var(--box-border);
-            border-radius: var(--radius);
-            padding: 35px;
-            box-shadow: var(--shadow);
-            margin-top: 20px;
-        }
-
-        .header-top {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px; border-bottom: 2px dashed #ddd; padding-bottom: 20px;
-        }
-        .main-title { font-size: 32px; font-weight: 900; margin: 0; cursor: pointer; }
-        .auth-status { font-size: 12px; font-weight: bold; background: #eee; padding: 5px 12px; border-radius: 20px; }
-
-        /* Subject Selection Grid */
-        .grid-container {
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px; margin-bottom: 30px;
-        }
-        .group-card {
-            border: 2px solid var(--text-main); padding: 15px; border-radius: 18px;
-            background: #fff; transition: transform 0.2s;
-        }
-        .group-card:hover { transform: translateY(-3px); }
-        .group-card h4 { margin: 0 0 10px 0; font-size: 13px; color: var(--text-muted); }
-        .sub-btn-stack { display: flex; flex-direction: column; gap: 6px; }
-        .sub-btn {
-            width: 100%; padding: 8px 12px; border: 1.5px solid var(--text-main);
-            border-radius: 10px; background: #fff; font-weight: 700; font-size: 13px;
-            cursor: pointer; text-align: left;
-        }
-        .sub-btn.active { background: var(--text-main); color: #fff; }
-
-        /* Main Contents Layout */
-        .content-layout { display: grid; grid-template-columns: 1fr; gap: 30px; }
-        @media (min-width: 1024px) { .content-layout { grid-template-columns: 2.2fr 1fr; } }
-
-        /* Timetable Panel */
-        .panel { border: var(--box-border); border-radius: var(--radius); padding: 25px; background: #fff; }
-        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .panel-header h3 { margin: 0; font-size: 20px; font-weight: 800; }
-        
-        .tab-group { display: flex; gap: 10px; }
-        .tab-btn {
-            padding: 8px 16px; border: 2px solid var(--text-main); border-radius: 12px;
-            font-weight: bold; cursor: pointer; background: #fff;
-        }
-        .tab-btn.active { background: var(--text-main); color: #fff; }
-
-        .scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .table-core { width: 100%; border-collapse: separate; border-spacing: 6px; min-width: 600px; }
-        .table-core th { padding: 12px; background: #f9f9f9; border-radius: 10px; font-size: 14px; }
-        .table-core td {
-            border: 1.5px solid #eee; border-radius: 12px; height: 85px; width: 18%;
-            padding: 10px; vertical-align: top; position: relative;
-        }
-        .table-core td.active-cell { border: 2px solid var(--text-main); }
-        .p-num { font-size: 12px; font-weight: 900; background: #000; color: #fff; padding: 2px 6px; border-radius: 5px; }
-        .cell-sub { font-weight: 900; font-size: 14px; display: block; margin-top: 5px; }
-        .cell-room { font-size: 10px; color: var(--text-muted); }
-        .cell-badge { 
-            position: absolute; bottom: 8px; right: 8px;
-            background: var(--highlight); font-size: 9px; padding: 2px 5px;
-            border: 1px solid #000; border-radius: 4px; font-weight: bold;
-        }
-
-        /* Calendar View */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .cal-head { text-align: center; font-weight: bold; font-size: 12px; padding: 10px 0; color: var(--text-muted); }
-        .cal-day {
-            min-height: 100px; border: 1.5px solid #eee; border-radius: 12px;
-            padding: 8px; position: relative;
-        }
-        .cal-day.today { border: 2.5px solid var(--accent-blue); background: #f0f7ff; }
-        .cal-num { font-weight: 800; font-size: 14px; }
-        .cal-item {
-            font-size: 9px; background: #000; color: #fff; padding: 2px 4px;
-            border-radius: 4px; margin-top: 3px; white-space: nowrap; overflow: hidden;
-        }
-
-        /* Form & List */
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; font-weight: 800; margin-bottom: 5px; color: var(--text-muted); }
-        .form-ctrl {
-            width: 100%; padding: 12px; border: 2px solid var(--text-main);
-            border-radius: 12px; font-family: inherit; font-weight: 700;
-        }
-        .btn-main {
-            width: 100%; padding: 15px; background: var(--text-main); color: #fff;
-            border: none; border-radius: 12px; font-size: 16px; font-weight: 900;
-            cursor: pointer; margin-top: 10px;
-        }
-
-        .task-card {
-            border: 2px solid var(--text-main); border-radius: 15px; padding: 15px;
-            margin-bottom: 12px; position: relative; background: #fff;
-        }
-        .task-card .delete-x { position: absolute; top: 10px; right: 15px; color: var(--accent-red); cursor: pointer; font-weight: bold; }
-        .task-sub-tag { font-size: 10px; font-weight: 800; color: var(--accent-blue); }
-        .task-title-text { font-weight: 800; font-size: 15px; margin: 4px 0; }
-        .task-info-text { font-size: 11px; color: var(--text-muted); }
-
-        /* After School Modal */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
-            z-index: 1000; backdrop-filter: blur(4px);
-        }
-        .modal.open { display: flex; }
-        .modal-body { background: #fff; border: var(--box-border); border-radius: 24px; padding: 30px; width: 90%; max-width: 400px; }
-
-        /* Loading */
+        /* Loading Screen */
         #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #fff; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -157,20 +42,86 @@
         .loader { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #000; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* Main Container */
+        .main-canvas {
+            width: 100%; max-width: 1100px;
+            background: var(--bg-canvas);
+            border: var(--box-border);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .header-top {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; border-bottom: 2px dashed #ddd; padding-bottom: 15px;
+        }
+        .main-title { font-size: 28px; font-weight: 900; margin: 0; cursor: pointer; }
+
+        /* Subject Selection */
+        .selection-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px; margin-bottom: 30px;
+        }
+        .group-card {
+            border: 2px solid var(--text-main); padding: 12px; border-radius: 15px;
+            background: #fff;
+        }
+        .group-card h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text-muted); }
+        .sub-btn-stack { display: flex; flex-direction: column; gap: 5px; }
+        .sub-btn {
+            width: 100%; padding: 7px 10px; border: 1.5px solid var(--text-main);
+            border-radius: 8px; background: #fff; font-weight: 700; font-size: 12px;
+            cursor: pointer; text-align: left;
+        }
+        .sub-btn.active { background: var(--text-main); color: #fff; }
+
+        /* Layout */
+        .content-layout { display: grid; grid-template-columns: 1fr; gap: 25px; }
+        @media (min-width: 1024px) { .content-layout { grid-template-columns: 2fr 1fr; } }
+
+        .panel { border: var(--box-border); border-radius: var(--radius); padding: 20px; background: #fff; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        /* Timetable */
+        .scroll-wrapper { overflow-x: auto; }
+        .table-core { width: 100%; border-collapse: separate; border-spacing: 5px; min-width: 600px; }
+        .table-core th { padding: 10px; background: #f9f9f9; border-radius: 8px; font-size: 13px; }
+        .table-core td {
+            border: 1.5px solid #eee; border-radius: 10px; height: 80px;
+            padding: 8px; vertical-align: top;
+        }
+        .cell-sub { font-weight: 900; font-size: 13px; display: block; }
+        .cell-room { font-size: 10px; color: var(--text-muted); }
+        .cell-badge { background: var(--highlight); font-size: 9px; padding: 2px 4px; border: 1px solid #000; border-radius: 4px; display: inline-block; margin-top: 5px; }
+
+        /* Calendar */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .cal-head { text-align: center; font-weight: bold; font-size: 11px; padding: 5px; }
+        .cal-day { min-height: 80px; border: 1.5px solid #eee; border-radius: 10px; padding: 5px; }
+        .cal-day.today { border: 2px solid var(--accent-blue); background: #f0f7ff; }
+
+        /* Forms */
+        .form-ctrl { width: 100%; padding: 10px; border: 2px solid var(--text-main); border-radius: 10px; font-family: inherit; font-weight: 700; margin-bottom: 10px; }
+        .btn-main { width: 100%; padding: 12px; background: var(--text-main); color: #fff; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; }
+        
+        .task-card { border: 2px solid var(--text-main); border-radius: 12px; padding: 12px; margin-bottom: 10px; position: relative; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="loading"><div class="loader"></div><p>데이터 불러오는 중...</p></div>
+<div id="loading"><div class="loader"></div><p>데이터 동기화 중...</p></div>
 
 <div class="main-canvas">
     <div class="header-top">
         <h1 class="main-title" id="display-title" onclick="changeTitle()">Daily Campus v3</h1>
-        <div class="auth-status" id="auth-info">연결 대기중</div>
+        <div id="auth-status" style="font-size: 11px; font-weight: bold;">연결 대기...</div>
     </div>
 
-    <div class="grid-container">
+    <div class="selection-grid">
         <div id="sel-A" class="group-card"><h4>선택 A</h4><div class="sub-btn-stack"></div></div>
         <div id="sel-B" class="group-card"><h4>선택 B</h4><div class="sub-btn-stack"></div></div>
         <div id="sel-C" class="group-card"><h4>선택 C</h4><div class="sub-btn-stack"></div></div>
@@ -178,102 +129,62 @@
         <div id="sel-E" class="group-card"><h4>선택 E</h4><div class="sub-btn-stack"></div></div>
         <div id="sel-F" class="group-card"><h4>선택 F</h4><div class="sub-btn-stack"></div></div>
         <div id="sel-G" class="group-card"><h4>선택 G</h4><div class="sub-btn-stack"></div></div>
-        <div class="group-card" style="background: var(--soft-blue);">
-            <h4>방과후 활동</h4>
-            <div id="after-list-area"></div>
-            <button class="sub-btn" style="border: 2px dashed #ccc; text-align: center; margin-top: 8px;" onclick="openAfterModal()">+ 추가</button>
+        <div class="group-card">
+            <h4>방과후</h4>
+            <div id="after-list"></div>
+            <button class="sub-btn" style="border: 1px dashed #ccc; text-align: center;" onclick="addAfterPrompt()">+ 추가</button>
         </div>
     </div>
 
     <div class="content-layout">
         <div class="panel">
             <div class="panel-header">
-                <h3 id="view-name">⏰ 주간 시간표</h3>
-                <div class="tab-group">
-                    <button class="tab-btn active" id="tab-week" onclick="toggleView('week')">주간</button>
-                    <button class="tab-btn" id="tab-month" onclick="toggleView('month')">월간</button>
-                </div>
+                <h3 id="view-title">⏰ 주간 시간표</h3>
+                <button onclick="toggleView()" class="sub-btn" style="width: auto;">전환</button>
             </div>
 
             <div id="week-view" class="scroll-wrapper">
                 <table class="table-core">
-                    <thead>
-                        <tr><th></th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr>
-                    </thead>
+                    <thead><tr><th></th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th></tr></thead>
                     <tbody id="timetable-body"></tbody>
                 </table>
             </div>
 
             <div id="month-view" class="hidden">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <select id="month-select" class="form-ctrl" style="width: auto; font-size: 18px;" onchange="renderCalendar()"></select>
-                </div>
+                <select id="month-select" class="form-ctrl" style="width: auto;" onchange="renderCalendar()"></select>
                 <div class="calendar-grid" id="calendar-body"></div>
             </div>
         </div>
 
         <div class="panel">
-            <h3 style="margin-top:0;">📝 일정 추가</h3>
-            <div class="input-group">
-                <label>과목</label>
-                <select id="task-sub" class="form-ctrl" onchange="autoMatchPeriod()"></select>
-            </div>
-            <div class="input-group">
-                <label>내용</label>
-                <input type="text" id="task-title" class="form-ctrl" placeholder="예: 수행평가 제출">
-            </div>
-            <div class="input-group">
-                <label>마감일 (MM/DD)</label>
-                <input type="text" id="task-date" class="form-ctrl" placeholder="05/22">
-            </div>
-            <div class="input-group">
-                <label>해당 교시 (자동 검색)</label>
-                <select id="task-period" class="form-ctrl"></select>
-            </div>
-            <button class="btn-main" onclick="addTask()">등록하기</button>
+            <h3>📝 일정 추가</h3>
+            <select id="task-sub" class="form-ctrl" onchange="autoMatch()"></select>
+            <input type="text" id="task-title" class="form-ctrl" placeholder="활동 내용">
+            <input type="text" id="task-date" class="form-ctrl" placeholder="날짜 (MM/DD)">
+            <select id="task-period" class="form-ctrl"></select>
+            <button class="btn-main" onclick="addTask()">등록</button>
 
-            <div id="task-display-list" style="margin-top: 30px;">
-                <h4 style="font-size: 14px; color: var(--text-muted); border-bottom: 1px solid #eee; padding-bottom: 10px;">📌 나의 일정</h4>
-                </div>
+            <div id="task-list-area" style="margin-top: 20px;"></div>
         </div>
-    </div>
-</div>
-
-<div id="after-modal" class="modal">
-    <div class="modal-body">
-        <h3 style="margin-top:0;">방과후 활동 등록</h3>
-        <div class="input-group"><label>활동 이름</label><input type="text" id="af-name" class="form-ctrl"></div>
-        <div class="input-group"><label>교실</label><input type="text" id="af-room" class="form-ctrl"></div>
-        <div class="input-group">
-            <label>요일 선택</label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <label><input type="checkbox" name="af-day" value="월"> 월</label>
-                <label><input type="checkbox" name="af-day" value="화"> 화</label>
-                <label><input type="checkbox" name="af-day" value="수"> 수</label>
-                <label><input type="checkbox" name="af-day" value="목"> 목</label>
-                <label><input type="checkbox" name="af-day" value="금"> 금</label>
-            </div>
-        </div>
-        <button class="btn-main" onclick="addAfterSchool()">저장</button>
-        <button class="btn-main" style="background:#666; margin-top:8px;" onclick="closeAfterModal()">취소</button>
     </div>
 </div>
 
 <script>
-    // --- 1. Firebase 설정 (반드시 본인의 설정값으로 채우세요) ---
+    // --- [중요] Firebase 설정값을 여기에 넣으세요 ---
     const firebaseConfig = {
-        apiKey: "AIzaSy...",
-        authDomain: "your-app.firebaseapp.com",
-        projectId: "your-app",
-        storageBucket: "your-app.appspot.com",
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT",
+        storageBucket: "YOUR_PROJECT.appspot.com",
         messagingSenderId: "...",
         appId: "..."
     };
+    // ------------------------------------------
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // --- 2. 기본 데이터 ---
     const DAYS = ["월", "화", "수", "목", "금"];
     const SUB_GROUPS = {
         "A": [{n:"심화 국어", r:"3-6"}, {n:"여행지리", r:"3-2"}, {n:"생명과학II", r:"3-8"}, {n:"지구과학II", r:"지관실"}, {n:"인공지능", r:"시리우스"}],
@@ -286,14 +197,10 @@
     };
 
     const BASE_SCHEDULE = [
-        ["독서", "G", "자율/창체", "E", "미적분"],
-        ["B", "D", "운동", "물리II", "독서"],
-        ["운동", "물리II", "C", "F", "G"],
-        ["A", "E", "G", "미적분", "B"],
-        ["영어 독해", "미적분", "독서", "A", "D"],
-        ["C", "영어 독해", "F", "영어 독해", "자율/창체"],
-        ["공강", "공강", "물리II", "공강", "자율/창체"],
-        ["(방과후)", "(방과후)", "(방과후)", "(방과후)", "(방과후)"]
+        ["독서", "G", "자율/창체", "E", "미적분"], ["B", "D", "운동", "물리II", "독서"],
+        ["운동", "물리II", "C", "F", "G"], ["A", "E", "G", "미적분", "B"],
+        ["영어 독해", "미적분", "독서", "A", "D"], ["C", "영어 독해", "F", "영어 독해", "자율/창체"],
+        ["공강", "공강", "물리II", "공강", "자율/창체"], ["", "", "", "", ""]
     ];
 
     const CAL_2026 = [
@@ -303,97 +210,54 @@
         {n:"10월", d:31, s:4}, {n:"11월", d:30, s:0}, {n:"12월", d:31, s:2}
     ];
 
-    // --- 3. 앱 상태 및 동기화 ---
-    let state = {
-        title: "Daily Campus v3",
-        selected: { A:null, B:null, C:null, D:null, E:null, F:null, G:null },
-        afterSchools: [],
-        tasks: [],
-        userId: null
-    };
+    let state = { title: "Daily Campus v3", selected: {}, after: [], tasks: [], uid: null };
 
-    auth.onAuthStateChanged(async (user) => {
+    auth.onAuthStateChanged(user => {
         if (user) {
-            state.userId = user.uid;
-            document.getElementById('auth-info').innerText = "Cloud Sync Active";
-            const docRef = db.collection("planners").doc(user.uid);
-            docRef.onSnapshot((snap) => {
-                if (snap.exists) {
-                    const data = snap.data();
-                    state = { ...state, ...data };
-                    renderAll();
-                } else {
-                    save(); // 초기화
-                }
+            state.uid = user.uid;
+            document.getElementById('auth-status').innerText = "온라인 동기화 중";
+            db.collection("planners").doc(user.uid).onSnapshot(doc => {
+                if (doc.exists) { state = { ...state, ...doc.data() }; renderAll(); }
+                else { save(); }
                 document.getElementById('loading').style.display = 'none';
             });
-        } else {
-            auth.signInAnonymously();
-        }
+        } else { auth.signInAnonymously(); }
     });
 
-    async function save() {
-        if (!state.userId) return;
-        await db.collection("planners").doc(state.userId).set({
-            title: state.title,
-            selected: state.selected,
-            afterSchools: state.afterSchools,
-            tasks: state.tasks
-        });
-    }
+    async function save() { if (state.uid) await db.collection("planners").doc(state.uid).set(state); }
 
-    // --- 4. 렌더링 함수들 ---
     function renderAll() {
         document.getElementById('display-title').innerText = state.title;
-        renderSelectionGrid();
-        renderTimetable();
-        renderTasks();
-        renderCalendar();
-        updateTaskDropdowns();
+        renderSelection(); renderTimetable(); renderTasks(); renderCalendar(); updateDropdowns();
     }
 
-    function renderSelectionGrid() {
+    function renderSelection() {
         Object.keys(SUB_GROUPS).forEach(g => {
-            const area = document.querySelector(`#sel-${g} .sub-btn-stack`);
-            area.innerHTML = '';
+            const el = document.querySelector(`#sel-${g} .sub-btn-stack`);
+            el.innerHTML = '';
             SUB_GROUPS[g].forEach(s => {
-                const btn = document.createElement('button');
-                btn.className = `sub-btn ${state.selected[g]?.n === s.n ? 'active' : ''}`;
-                btn.innerText = s.n;
-                btn.onclick = () => { state.selected[g] = s; save(); };
-                area.appendChild(btn);
+                const b = document.createElement('button');
+                b.className = `sub-btn ${state.selected[g]?.n === s.n ? 'active' : ''}`;
+                b.innerText = s.n;
+                b.onclick = () => { state.selected[g] = s; save(); };
+                el.appendChild(b);
             });
         });
-
-        const afterArea = document.getElementById('after-list-area');
-        afterArea.innerHTML = '';
-        state.afterSchools.forEach((a, i) => {
-            afterArea.innerHTML += `
-                <div style="font-size:12px; background:#fff; border:1px solid #000; padding:8px; border-radius:10px; margin-bottom:5px; position:relative;">
-                    <b>${a.name}</b> <span style="font-size:10px; color:#666;">${a.days.join(',')}</span>
-                    <span style="position:absolute; right:8px; top:8px; color:red; cursor:pointer;" onclick="deleteAfter(${i})">×</span>
-                </div>`;
-        });
+        const aftEl = document.getElementById('after-list');
+        aftEl.innerHTML = state.after.map((a, i) => `<div style="font-size:10px; margin-bottom:5px;"><b>${a.n}</b> (${a.d}) <span style="color:red; cursor:pointer;" onclick="delAfter(${i})">×</span></div>`).join('');
     }
 
     function renderTimetable() {
         const body = document.getElementById('timetable-body');
         body.innerHTML = '';
         BASE_SCHEDULE.forEach((row, p) => {
-            let tr = `<tr><td style="text-align:center;"><span class="p-num">${p+1}</span></td>`;
+            let tr = `<tr><td style="font-weight:bold; font-size:12px; text-align:center;">${p+1}</td>`;
             row.forEach((cell, d) => {
                 let name = cell, room = "3-9";
                 if (state.selected[cell]) { name = state.selected[cell].n; room = state.selected[cell].r; }
-                if (p === 7) {
-                    const as = state.afterSchools.find(a => a.days.includes(DAYS[d]));
-                    name = as ? as.name : ""; room = as ? as.room : "";
-                }
-                const hasTask = state.tasks.find(t => t.sub === name && t.period === `${DAYS[d]} ${p+1}교시`);
-                tr += `<td class="${name?'active-cell':''}">
-                    <span class="cell-sub">${name}</span>
-                    <span class="cell-room">${room}</span>
-                    ${hasTask ? `<span class="cell-badge">${hasTask.title}</span>` : ''}
-                </td>`;
+                if (p === 7) { const a = state.after.find(x => x.d.includes(DAYS[d])); name = a?a.n:""; room = a?a.r:""; }
+                const t = state.tasks.find(x => x.sub === name && x.per === `${DAYS[d]} ${p+1}교시`);
+                tr += `<td><span class="cell-sub">${name}</span><span class="cell-room">${room}</span>${t?`<div class="cell-badge">${t.ttl}</div>`:''}</td>`;
             });
             body.innerHTML += tr + `</tr>`;
         });
@@ -403,99 +267,62 @@
         const sel = document.getElementById('month-select');
         if (!sel.innerHTML) CAL_2026.forEach((m, i) => sel.innerHTML += `<option value="${i}">2026년 ${m.n}</option>`);
         const mIdx = parseInt(sel.value || new Date().getMonth());
-        const mData = CAL_2026[mIdx];
-        
+        const m = CAL_2026[mIdx];
         const body = document.getElementById('calendar-body');
         body.innerHTML = '';
-        ["일","월","화","수","목","금","토"].forEach(d => body.innerHTML += `<div class="cal-head">${d}</div>`);
-        
-        for(let i=0; i<mData.s; i++) body.innerHTML += `<div></div>`;
-        for(let d=1; d<=mData.d; d++) {
-            const dStr = `${String(mIdx+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
-            const dTasks = state.tasks.filter(t => t.date === dStr);
-            body.innerHTML += `
-                <div class="cal-day">
-                    <span class="cal-num">${d}</span>
-                    ${dTasks.map(t => `<div class="cal-item">${t.title}</div>`).join('')}
-                </div>`;
+        ["일","월","화","수","목","금","토"].forEach(h => body.innerHTML += `<div class="cal-head">${h}</div>`);
+        for(let i=0; i<m.s; i++) body.innerHTML += `<div></div>`;
+        for(let d=1; d<=m.d; d++) {
+            const date = `${String(mIdx+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+            const ts = state.tasks.filter(x => x.dat === date);
+            body.innerHTML += `<div class="cal-day"><b>${d}</b>${ts.map(x => `<div style="font-size:8px; background:#000; color:#fff; margin-top:2px;">${x.ttl}</div>`).join('')}</div>`;
         }
     }
 
     function renderTasks() {
-        const list = document.getElementById('task-display-list');
-        list.innerHTML = '<h4>📌 나의 일정</h4>';
-        state.tasks.sort((a,b) => a.date.localeCompare(b.date)).forEach(t => {
-            list.innerHTML += `
-                <div class="task-card">
-                    <span class="delete-x" onclick="deleteTask('${t.id}')">×</span>
-                    <div class="task-sub-tag">${t.sub}</div>
-                    <div class="task-title-text">${t.title}</div>
-                    <div class="task-info-text">📅 ${t.date} | ⏰ ${t.period}</div>
-                </div>`;
-        });
+        document.getElementById('task-list-area').innerHTML = state.tasks.map(t => `<div class="task-card"><span style="float:right; color:red; cursor:pointer;" onclick="delTask('${t.id}')">×</span><small>${t.sub}</small><br><b>${t.ttl}</b><br><small>${t.dat} | ${t.per}</small></div>`).join('');
     }
 
-    function updateTaskDropdowns() {
-        const subSel = document.getElementById('task-sub');
-        const current = subSel.value;
-        subSel.innerHTML = '<option value="">선택</option>';
-        const subs = new Set(["독서","미적분","운동","영어 독해","물리II","자율/창체"]);
-        Object.values(state.selected).forEach(s => { if(s) subs.add(s.n); });
-        state.afterSchools.forEach(a => subs.add(a.name));
-        subs.forEach(s => subSel.innerHTML += `<option value="${s}">${s}</option>`);
-        subSel.value = current;
+    function updateDropdowns() {
+        const s = document.getElementById('task-sub');
+        const prev = s.value; s.innerHTML = '<option value="">과목 선택</option>';
+        const list = new Set(["독서","미적분","운동","영어 독해","물리II","자율/창체"]);
+        Object.values(state.selected).forEach(x => { if(x) list.add(x.n); });
+        state.after.forEach(x => list.add(x.n));
+        list.forEach(x => s.innerHTML += `<option value="${x}">${x}</option>`);
+        s.value = prev;
     }
 
-    // --- 5. 로직 함수들 ---
-    window.autoMatchPeriod = () => {
+    window.autoMatch = () => {
         const sub = document.getElementById('task-sub').value;
-        const pSel = document.getElementById('task-period');
-        pSel.innerHTML = '<option value="미지정">미지정</option>';
-        BASE_SCHEDULE.forEach((row, p) => {
-            row.forEach((cell, d) => {
-                let name = cell;
-                if(state.selected[cell]) name = state.selected[cell].n;
-                if(p === 7) { const as = state.afterSchools.find(a => a.days.includes(DAYS[d])); name = as?as.name:""; }
-                if(name === sub) pSel.innerHTML += `<option value="${DAYS[d]} ${p+1}교시">${DAYS[d]} ${p+1}교시</option>`;
-            });
-        });
+        const p = document.getElementById('task-period');
+        p.innerHTML = '<option value="미지정">미지정</option>';
+        BASE_SCHEDULE.forEach((row, rIdx) => row.forEach((cell, dIdx) => {
+            let name = cell; if(state.selected[cell]) name = state.selected[cell].n;
+            if(rIdx===7) { const a = state.after.find(x => x.d.includes(DAYS[dIdx])); name = a?a.n:""; }
+            if(name === sub) p.innerHTML += `<option value="${DAYS[dIdx]} ${rIdx+1}교시">${DAYS[dIdx]} ${rIdx+1}교시</option>`;
+        }));
     };
 
     window.addTask = () => {
+        const ttl = document.getElementById('task-title').value;
+        const dat = document.getElementById('task-date').value;
         const sub = document.getElementById('task-sub').value;
-        const title = document.getElementById('task-title').value;
-        const date = document.getElementById('task-date').value;
-        const period = document.getElementById('task-period').value;
-        if(!title || !date) return alert("내용과 날짜를 입력하세요!");
-        state.tasks.push({ id: Date.now().toString(), sub, title, date, period });
-        save();
-        document.getElementById('task-title').value = '';
+        const per = document.getElementById('task-period').value;
+        if(!ttl || !dat) return alert("내용과 날짜를 입력하세요.");
+        state.tasks.push({ id: Date.now().toString(), ttl, dat, sub, per });
+        save(); document.getElementById('task-title').value = '';
     };
 
-    window.deleteTask = (id) => { state.tasks = state.tasks.filter(t => t.id !== id); save(); };
-
-    window.toggleView = (v) => {
-        document.getElementById('week-view').classList.toggle('hidden', v !== 'week');
-        document.getElementById('month-view').classList.toggle('hidden', v !== 'month');
-        document.getElementById('tab-week').classList.toggle('active', v === 'week');
-        document.getElementById('tab-month').classList.toggle('active', v === 'month');
-        document.getElementById('view-name').innerText = v === 'week' ? "⏰ 주간 시간표" : "📆 월간 캘린더";
+    window.delTask = id => { state.tasks = state.tasks.filter(x => x.id !== id); save(); };
+    window.addAfterPrompt = () => {
+        const n = prompt("활동명:"); const r = prompt("교실:"); const d = prompt("요일(쉼표구분, 예:월,수):");
+        if(n && d) { state.after.push({ n, r, d: d.split(',') }); save(); }
     };
-
-    window.openAfterModal = () => document.getElementById('after-modal').classList.add('open');
-    window.closeAfterModal = () => document.getElementById('after-modal').classList.remove('open');
-
-    window.addAfterSchool = () => {
-        const name = document.getElementById('af-name').value;
-        const room = document.getElementById('af-room').value;
-        const days = Array.from(document.querySelectorAll('input[name="af-day"]:checked')).map(c => c.value);
-        if(!name || days.length === 0) return alert("정보를 입력하세요.");
-        state.afterSchools.push({ name, room, days });
-        save(); closeAfterModal();
-    };
-
-    window.deleteAfter = (i) => { state.afterSchools.splice(i, 1); save(); };
+    window.delAfter = i => { state.after.splice(i, 1); save(); };
+    window.toggleView = () => { document.getElementById('week-view').classList.toggle('hidden'); document.getElementById('month-view').classList.toggle('hidden'); };
     window.changeTitle = () => { const t = prompt("새 제목:", state.title); if(t) { state.title = t; save(); } };
+    window.renderCalendar = renderCalendar;
 </script>
 </body>
 </html>
