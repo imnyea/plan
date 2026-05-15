@@ -3,116 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Daily Campus v2.0 (Full Year)</title>
-    
+    <title>Daily Campus v2 (Full Year)</title>
     <style>
         :root {
             --bg-canvas: #ffffff;
-            --bg-body: #f4f6f8;
-            --text-main: #111111;
-            --box-border: 3px solid #111111;
-            --highlight: #e2ff31;
-            --accent-blue: #2563eb;
-            --radius: 24px;
+            --bg-body: #f5f7fa;
+            --text-main: #1a1a1a;
+            --box-border: 3px solid #1a1a1a;
+            --highlight: #dfff00;
+            --radius: 20px;
         }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg-body); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .main-canvas { width: 100%; max-width: 900px; background: #fff; border: var(--box-border); border-radius: var(--radius); padding: 20px; box-shadow: 8px 8px 0px #000; }
+        .header { text-align: center; font-size: 24px; font-weight: 900; margin-bottom: 20px; }
+        
+        .view-controls { text-align: center; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; border: 2px solid #000; border-radius: 30px; background: #fff; font-weight: 800; cursor: pointer; }
+        
+        #month-select { padding: 8px; border: 2px solid #000; border-radius: 10px; font-weight: 800; margin-bottom: 15px; }
 
-        body {
-            font-family: 'Pretendard', -apple-system, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: env(safe-area-inset-top) 15px 30px 15px;
-            margin: 0;
-        }
-
-        .main-canvas {
-            width: 100%;
-            max-width: 1200px;
-            background: var(--bg-canvas);
-            border: var(--box-border);
-            padding: 25px;
-            box-shadow: 10px 10px 0px #111111;
-            border-radius: var(--radius);
-            box-sizing: border-box;
-            margin-top: 15px;
-        }
-
-        .header-title { font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 25px; }
-
-        /* 월 선택 드롭다운 스타일 강화 */
-        .month-selector-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #month-select {
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: 800;
-            border: 2px solid #000;
-            border-radius: 12px;
-            background: #fff;
-            cursor: pointer;
-        }
-
-        /* 달력 그리드 */
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            gap: 1px; 
-            background: #000; 
-            border: 2px solid #000; 
-            border-radius: 12px; 
-            overflow: hidden; 
-        }
-        .cal-header { text-align: center; font-weight: 800; padding: 10px; background: #f8f9fa; font-size: 12px; }
-        .cal-day { min-height: 100px; padding: 8px; font-size: 13px; background: #fff; position: relative; }
-        .cal-day.today-highlight { background: #eff6ff; box-shadow: inset 0 0 0 2px var(--accent-blue); }
-        .cal-day.other-month { background: #f9f9f9; color: #ccc; }
-
-        .cal-task-item { 
-            font-size: 10px; 
-            background: var(--highlight); 
-            border: 1px solid #000; 
-            margin-top: 4px; 
-            padding: 3px 5px; 
-            border-radius: 5px; 
-            font-weight: bold; 
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #000; border: 2px solid #000; border-radius: 10px; overflow: hidden; }
+        .cal-header { background: #f0f0f0; padding: 10px; text-align: center; font-size: 12px; font-weight: 800; }
+        .cal-day { background: #fff; min-height: 80px; padding: 8px; font-size: 13px; position: relative; }
+        .cal-day.empty { background: #fafafa; }
+        
         .hidden { display: none !important; }
-        button.view-btn {
-            padding: 10px 20px;
-            border-radius: 30px;
-            border: 2px solid #000;
-            background: #fff;
-            font-weight: 800;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
 
 <div class="main-canvas">
-    <div class="header-title">Daily Campus 2026</div>
-
-    <div style="text-align: center;">
-        <button class="view-btn" onclick="toggleView()" id="toggle-btn">SWITCH TO MONTHLY</button>
+    <div class="header">CAMPUS v2.0</div>
+    
+    <div class="view-controls">
+        <button class="btn" onclick="toggleView()">전환: 주간 / 월간</button>
     </div>
 
     <div id="weekly-view">
-        <p style="text-align:center; color:#888;">주간 시간표는 선택된 과목에 따라 자동 업데이트됩니다.</p>
+        <p style="text-align:center;">📅 주간 시간표가 여기에 표시됩니다.</p>
     </div>
 
     <div id="monthly-view" class="hidden">
-        <div class="month-selector-container">
+        <div style="text-align: center;">
             <select id="month-select" onchange="renderCalendar()"></select>
         </div>
         <div class="calendar-grid" id="calendar-body"></div>
@@ -120,77 +52,37 @@
 </div>
 
 <script>
-    // 2026년 각 월의 일수와 시작 요일 (0: 일요일, 1: 월요일...)
-    const calendarConfig = [
-        { name: "2026년 1월", days: 31, start: 4 },
-        { name: "2026년 2월", days: 28, start: 0 },
-        { name: "2026년 3월", days: 31, start: 0 },
-        { name: "2026년 4월", days: 30, start: 3 },
-        { name: "2026년 5월", days: 31, start: 5 },
-        { name: "2026년 6월", days: 30, start: 1 },
-        { name: "2026년 7월", days: 31, start: 3 },
-        { name: "2026년 8월", days: 31, start: 6 },
-        { name: "2026년 9월", days: 30, start: 2 },
-        { name: "2026년 10월", days: 31, start: 4 },
-        { name: "2026년 11월", days: 30, start: 0 },
-        { name: "2026년 12월", days: 31, start: 2 }
+    // 2026년 1월~12월 달력 데이터 (일수, 시작요일: 0=일, 1=월...)
+    const calData2026 = [
+        { n: "1월", d: 31, s: 4 }, { n: "2월", d: 28, s: 0 }, { n: "3월", d: 31, s: 0 },
+        { n: "4월", d: 30, s: 3 }, { n: "5월", d: 31, s: 5 }, { n: "6월", d: 30, s: 1 },
+        { n: "7월", d: 31, s: 3 }, { n: "8월", d: 31, s: 6 }, { n: "9월", d: 30, s: 2 },
+        { n: "10월", d: 31, s: 4 }, { n: "11월", d: 30, s: 0 }, { n: "12월", d: 31, s: 2 }
     ];
 
     window.onload = () => {
-        initMonthSelector();
+        const sel = document.getElementById('month-select');
+        calData2026.forEach((m, i) => {
+            sel.innerHTML += `<option value="${i}">2026년 ${m.n}</option>`;
+        });
+        sel.value = new Date().getMonth(); // 현재 달 자동 선택
         renderCalendar();
     };
 
-    function initMonthSelector() {
-        const sel = document.getElementById('month-select');
-        calendarConfig.forEach((m, i) => {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.innerText = m.name;
-            // 현재 날짜 기준으로 해당 월 자동 선택 (예: 5월이면 4번 인덱스)
-            if(i === new Date().getMonth()) opt.selected = true;
-            sel.appendChild(opt);
-        });
-    }
-
     function renderCalendar() {
-        const mIdx = parseInt(document.getElementById('month-select').value);
-        const config = calendarConfig[mIdx];
+        const idx = document.getElementById('month-select').value;
+        const config = calData2026[idx];
         const body = document.getElementById('calendar-body');
-        
         body.innerHTML = '';
-        // 요일 헤더
-        ["일", "월", "화", "수", "목", "금", "토"].forEach(d => {
-            body.innerHTML += `<div class="cal-header">${d}</div>`;
-        });
 
-        // 공백 처리
-        for(let i=0; i<config.start; i++) {
-            body.innerHTML += `<div class="cal-day other-month"></div>`;
-        }
-
-        // 일자 렌더링
-        for(let d=1; d<=config.days; d++) {
-            body.innerHTML += `<div class="cal-day">
-                <div style="font-weight:800; margin-bottom:5px;">${d}</div>
-                </div>`;
-        }
+        ["일","월","화","수","목","금","토"].forEach(h => body.innerHTML += `<div class="cal-header">${h}</div>`);
+        for(let i=0; i<config.s; i++) body.innerHTML += `<div class="cal-day empty"></div>`;
+        for(let i=1; i<=config.d; i++) body.innerHTML += `<div class="cal-day"><b>${i}</b></div>`;
     }
 
     function toggleView() {
-        const w = document.getElementById('weekly-view');
-        const m = document.getElementById('monthly-view');
-        const btn = document.getElementById('toggle-btn');
-        
-        if(w.classList.contains('hidden')) {
-            w.classList.remove('hidden');
-            m.classList.add('hidden');
-            btn.innerText = "SWITCH TO MONTHLY";
-        } else {
-            w.classList.add('hidden');
-            m.classList.remove('hidden');
-            btn.innerText = "SWITCH TO WEEKLY";
-        }
+        document.getElementById('weekly-view').classList.toggle('hidden');
+        document.getElementById('monthly-view').classList.toggle('hidden');
     }
 </script>
 </body>
